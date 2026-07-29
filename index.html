@@ -154,6 +154,7 @@ section{padding-block:clamp(56px,8vw,104px);border-bottom:1px solid var(--rule)}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .pubs{list-style:none;border-top:1px solid var(--rule)}
 .pub{display:grid;grid-template-columns:64px 1fr;gap:0 18px;padding:20px 0 20px 14px;border-bottom:1px solid var(--rule);position:relative;transition:padding-left .2s,background .2s}
+.pub[hidden]{display:none}
 .pub::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--signal);transform:scaleY(0);transform-origin:top;transition:transform .22s}
 .pub:hover{padding-left:22px;background:var(--card)}
 .pub:hover::before{transform:scaleY(1)}
@@ -393,8 +394,7 @@ footer{padding-block:30px;font-family:var(--mono);font-size:11px;color:var(--mut
       </div>
 
       <div class="filter rise" role="group" aria-label="Publication filters">
-        <button class="chip" data-filter="all" aria-pressed="true">All</button>
-        <button class="chip" data-filter="select" aria-pressed="false">Selected</button>
+        <button class="chip" data-filter="select" aria-pressed="true">Selected</button>
         <button class="chip" data-filter="lead" aria-pressed="false">1st / C.A</button>
         <button class="chip" data-filter="2026" aria-pressed="false">2026</button>
         <button class="chip" data-filter="2025" aria-pressed="false">2025</button>
@@ -865,34 +865,45 @@ const chips = document.querySelectorAll('.chip');
 const pubs  = document.querySelectorAll('.pub');
 const empty = document.getElementById('empty');
 
-chips.forEach(chip => {
-  chip.addEventListener('click', () => {
-    chips.forEach(c => c.setAttribute('aria-pressed', String(c === chip)));
-    const f = chip.dataset.filter;
-    let shown = 0;
-    pubs.forEach(p => {
-      const ok = f === 'all'
-        || (f === 'select' && p.dataset.select === '1')
-        || (f === 'lead' && p.dataset.lead === '1')
-        || p.dataset.year === f;
-      p.hidden = !ok;
-      if (ok) shown++;
-    });
-    empty.hidden = shown > 0;
+function applyFilter(f) {
+  chips.forEach(c => c.setAttribute('aria-pressed', String(c.dataset.filter === f)));
+  let shown = 0;
+  pubs.forEach(p => {
+    const ok = f === 'all'
+      || (f === 'select' && p.dataset.select === '1')
+      || (f === 'lead' && p.dataset.lead === '1')
+      || p.dataset.year === f;
+    p.hidden = !ok;
+    if (ok) shown++;
   });
-});
+  empty.hidden = shown > 0;
+}
+
+chips.forEach(chip => chip.addEventListener('click', () => applyFilter(chip.dataset.filter)));
+
+// default view: selected publications
+applyFilter('select');
 
 // Scroll reveal
-const io = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-  });
-}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+const rises = document.querySelectorAll('.rise');
+const showAll = () => rises.forEach(el => el.classList.add('in'));
 
-document.querySelectorAll('.rise').forEach((el, i) => {
-  el.style.transitionDelay = (i % 3) * 70 + 'ms';
-  io.observe(el);
-});
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+
+  rises.forEach((el, i) => {
+    el.style.transitionDelay = (i % 3) * 70 + 'ms';
+    io.observe(el);
+  });
+  // safety net: never leave content hidden
+  window.addEventListener('load', () => setTimeout(showAll, 1200));
+} else {
+  showAll();
+}
 </script>
 </body>
 </html>
