@@ -154,6 +154,7 @@ section{padding-block:clamp(56px,8vw,104px);border-bottom:1px solid var(--rule)}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .pubs{list-style:none;border-top:1px solid var(--rule)}
 .pub{display:grid;grid-template-columns:64px 1fr;gap:0 18px;padding:20px 0 20px 14px;border-bottom:1px solid var(--rule);position:relative;transition:padding-left .2s,background .2s}
+.pub[hidden]{display:none}
 .pub::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--signal);transform:scaleY(0);transform-origin:top;transition:transform .22s}
 .pub:hover{padding-left:22px;background:var(--card)}
 .pub:hover::before{transform:scaleY(1)}
